@@ -6071,6 +6071,26 @@ package body LSP.Ada_Handlers is
       end;
    end On_Range_Formatting_Request;
 
+   -----------------------------------
+   -- On_On_Type_Formatting_Request --
+   -----------------------------------
+
+   overriding function On_On_Type_Formatting_Request
+     (Self    : access Message_Handler;
+      Request : LSP.Messages.Server_Requests.On_Type_Formatting_Request)
+      return LSP.Messages.Server_Responses.On_Type_Formatting_Response
+   is
+      Response : LSP.Messages.Server_Responses.On_Type_Formatting_Response
+        (Is_Error => True);
+   begin
+      Response.error :=
+        (True,
+         (code    => LSP.Errors.InternalError,
+          message => "Not implemented",
+          data    => <>));
+      return Response;
+   end On_On_Type_Formatting_Request;
+
    ------------------
    -- Handle_Error --
    ------------------

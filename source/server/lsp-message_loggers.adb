@@ -2283,6 +2283,21 @@ package body LSP.Message_Loggers is
          & Image (Value.params));
    end On_Range_Formatting_Request;
 
+   -----------------------------------
+   -- On_On_Type_Formatting_Request --
+   -----------------------------------
+
+   overriding procedure On_On_Type_Formatting_Request
+     (Self  : access Message_Logger;
+      Value : LSP.Messages.Server_Requests.On_Type_Formatting_Request)
+   is
+   begin
+      Self.Trace.Trace
+        ("On_Type_Formatting_Request: "
+         & Image (Value)
+         & Image (Value.params));
+   end On_On_Type_Formatting_Request;
+
    ----------------------------
    -- On_Formatting_Response --
    ----------------------------
@@ -2321,6 +2336,25 @@ package body LSP.Message_Loggers is
         ("Range_Formatting_Response: "
          & Image (Response) & Image (Response.result));
    end On_Range_Formatting_Response;
+
+   ------------------------------------
+   -- On_On_Type_Formatting_Response --
+   ------------------------------------
+
+   overriding procedure On_On_Type_Formatting_Response
+     (Self     : in out Message_Logger;
+      Response : LSP.Messages.Server_Responses.On_Type_Formatting_Response) is
+   begin
+      if Response.Is_Error then
+         Self.Trace.Trace
+           ("On_Type_Formatting_Response: " & Image (Response) & " Error");
+         return;
+      end if;
+
+      Self.Trace.Trace
+        ("On_Type_Formatting_Response: "
+         & Image (Response) & Image (Response.result));
+   end On_On_Type_Formatting_Response;
 
    ---------------------------------
    -- On_ALS_Check_Syntax_Request --
