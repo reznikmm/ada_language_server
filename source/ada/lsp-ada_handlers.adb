@@ -246,6 +246,15 @@ package body LSP.Ada_Handlers is
       return LSP.Messages.Server_Responses.Formatting_Response;
    --  Format the text of the given document in the given range (span).
 
+   function On_Type_Formatting
+     (Self     : LSP.Ada_Contexts.Context;
+      Document : LSP.Ada_Documents.Document_Access;
+      Position : LSP.Messages.Position;
+      Ch       : VSS.Strings.Virtual_String;
+      Options  : LSP.Messages.FormattingOptions)
+      return LSP.Messages.Server_Responses.On_Type_Formatting_Response;
+   --  TODO: doc
+
    type File_Span is record
       File : GNATCOLL.VFS.Virtual_File;
       Span : LSP.Messages.Span;
@@ -950,6 +959,35 @@ package body LSP.Ada_Handlers is
    end Range_Format;
 
    ------------------------
+   -- On_Type_Formatting --
+   ------------------------
+
+   function On_Type_Formatting
+     (Self     : LSP.Ada_Contexts.Context;
+      Document : LSP.Ada_Documents.Document_Access;
+      Position : LSP.Messages.Position;
+      Ch       : VSS.Strings.Virtual_String;
+      Options  : LSP.Messages.FormattingOptions)
+      return LSP.Messages.Server_Responses.On_Type_Formatting_Response
+   is
+      pragma Unreferenced (Options);
+      Response : LSP.Messages.Server_Responses.On_Type_Formatting_Response
+        (Is_Error => False);
+      Messages : VSS.String_Vectors.Virtual_String_Vector;
+      Success  : Boolean;
+      pragma Unreferenced (Success);
+   begin
+      Success := Document.On_Type_Formatting
+        (Context  => Self,
+         Position => Position,
+         Ch       => Ch,
+         Edit     => Response.result,
+         Messages => Messages);
+
+      return Response;
+   end On_Type_Formatting;
+
+   ------------------------
    -- Initialize_Request --
    ------------------------
 
@@ -998,11 +1036,22 @@ package body LSP.Ada_Handlers is
       Response.result.capabilities.documentFormattingProvider :=
         (Is_Set => True,
          Value  => (workDoneProgress => LSP.Types.None));
+
       if Partial_GNATpp.Is_Active then
          Response.result.capabilities.documentRangeFormattingProvider :=
            (Is_Set => True,
             Value  => (workDoneProgress => LSP.Types.None));
+
+         Response.result.capabilities.documentOnTypeFormattingProvider :=
+           (Is_Set => True,
+            Value  => DocumentOnTypeFormattingOptions'
+              (workDoneProgress          => LSP.Types.None,
+               firstTriggerCharacter     =>
+                 VSS.Strings.Conversions.To_Virtual_String
+                   ("" & Ada.Characters.Latin_1.LF),
+               moreTriggerCharacter      => (others => <>)));
       end if;
+
       Response.result.capabilities.callHierarchyProvider :=
         (Is_Set => True,
          Value  => (Is_Boolean => False, Options => <>));
@@ -6080,14 +6129,22 @@ package body LSP.Ada_Handlers is
       Request : LSP.Messages.Server_Requests.On_Type_Formatting_Request)
       return LSP.Messages.Server_Responses.On_Type_Formatting_Response
    is
-      Response : LSP.Messages.Server_Responses.On_Type_Formatting_Response
-        (Is_Error => True);
+      Context  : constant Context_Access :=
+        Self.Contexts.Get_Best_Context (Request.params.textDocument.uri);
+
+      Document : constant LSP.Ada_Documents.Document_Access :=
+        Get_Open_Document (Self, Request.params.textDocument.uri);
+
+      Response : constant
+        LSP.Messages.Server_Responses.On_Type_Formatting_Response
+        (Is_Error => False) := On_Type_Formatting
+        (Self     => Context.all,
+         Document => Document,
+         Position => Request.params.position,
+         Ch       => Request.params.ch,
+         Options  => Request.params.options);
    begin
-      Response.error :=
-        (True,
-         (code    => LSP.Errors.InternalError,
-          message => "Not implemented",
-          data    => <>));
+
       return Response;
    end On_On_Type_Formatting_Request;
 

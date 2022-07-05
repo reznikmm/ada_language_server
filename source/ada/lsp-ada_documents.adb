@@ -37,6 +37,7 @@ with Laltools.Common;
 with Laltools.Partial_GNATPP;
 
 with VSS.Strings.Character_Iterators;
+with VSS.Strings.Cursors;
 with VSS.Strings.Line_Iterators;
 with VSS.Unicode;
 
@@ -51,6 +52,8 @@ with Pp.Actions;
 with Pp.Scanner;
 
 with Utils.Char_Vectors;
+with VSS.Strings.Cursors.Iterators.Words;
+with VSS.Strings.Cursors.Iterators.Characters;
 
 package body LSP.Ada_Documents is
 
@@ -1218,6 +1221,82 @@ package body LSP.Ada_Documents is
       when others =>
          return False;
    end Range_Formatting;
+
+   ------------------------
+   -- On_Type_Formatting --
+   ------------------------
+
+   function On_Type_Formatting
+     (Self     : Document;
+      Context  : LSP.Ada_Contexts.Context;
+      Position : LSP.Messages.Position;
+      Ch       : VSS.Strings.Virtual_String;
+      Edit     : out LSP.Messages.TextEdit_Vector;
+      Messages : out VSS.String_Vectors.Virtual_String_Vector)
+      return Boolean
+   is
+      use Libadalang.Common;
+      use LSP.Types;
+      use VSS.Strings;
+      use VSS.Strings.Cursors;
+
+      pragma Unreferenced (Messages);
+
+      Token : constant Libadalang.Common.Token_Reference :=
+        Self.Get_Token_At (Context, Position);
+
+      Prev  : constant Libadalang.Common.Token_Reference :=
+        (if Token = Libadalang.Common.No_Token
+         then Token
+         else Libadalang.Common.Previous (Token));
+
+      Token_Kind : constant Libadalang.Common.Token_Kind :=
+        Libadalang.Common.Kind (Libadalang.Common.Data (Prev));
+
+      Prev_Line  : constant VSS.Strings.Virtual_String := Self.Text.Slice
+        (Self.Line_To_Marker (Position.line - 1),
+         Self.Line_To_Marker (Position.line));
+      First_Word : constant Iterators.Words.Word_Iterator :=
+        Prev_Line.At_First_Word;
+      Char       : constant Iterators.Characters.Character_Iterator :=
+        Prev_Line.At_Character (First_Word.First_Marker);
+      Prev_Line_Whitespaces : constant VSS.Strings.Virtual_String :=
+        Prev_Line.Slice (Prev_Line.At_First_Character, Char);
+   begin
+      Self.Trace.Trace ("Token kind: " & Libadalang.Common.Image (Prev));
+      Self.Trace.Trace
+        ("Prev line:" & VSS.Strings.Conversions.To_UTF_8_String (Prev_Line));
+      Self.Trace.Trace
+        ("Prev whitespaces:"
+         & VSS.Strings.Conversions.To_UTF_8_String (Prev_Line_Whitespaces));
+
+      if Token_Kind in Libadalang.Common.Ada_Begin
+        | Libadalang.Common.Ada_Declare
+        | Libadalang.Common.Ada_Is
+      then
+         if Is_Ada_Separator
+           (Prev_Line_Whitespaces.At_First_Character.Element)
+         then
+            Edit.Append
+              (LSP.Messages.TextEdit'(LSP.Messages.Span'(Position, Position),
+               Prev_Line_Whitespaces & "   "));
+         else
+            Edit.Append
+              (LSP.Messages.TextEdit'(LSP.Messages.Span'(Position, Position),
+               VSS.Strings.Conversions.To_Virtual_String ("   ")));
+         end if;
+      else
+         if Is_Ada_Separator
+           (Prev_Line_Whitespaces.At_First_Character.Element)
+         then
+            Edit.Append
+              (LSP.Messages.TextEdit'(LSP.Messages.Span'(Position, Position),
+               Prev_Line_Whitespaces));
+         end if;
+      end if;
+
+      return True;
+   end On_Type_Formatting;
 
    ------------------------
    -- Get_Imported_Units --

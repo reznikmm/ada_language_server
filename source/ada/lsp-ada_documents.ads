@@ -194,6 +194,16 @@ package LSP.Ada_Documents is
       return Boolean;
    --  Format document or its part defined in Span
 
+   function On_Type_Formatting
+     (Self     : Document;
+      Context  : LSP.Ada_Contexts.Context;
+      Position : LSP.Messages.Position;
+      Ch       : VSS.Strings.Virtual_String;
+      Edit     : out LSP.Messages.TextEdit_Vector;
+      Messages : out VSS.String_Vectors.Virtual_String_Vector)
+      return Boolean;
+   --  TODO: doc
+
    procedure Get_Imported_Units
      (Self          : Document;
       Context       : LSP.Ada_Contexts.Context;
