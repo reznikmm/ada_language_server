@@ -142,8 +142,9 @@ package body LSP.Ada_Documents is
 
       declare
          J                    : VSS.Strings.Line_Iterators.Line_Iterator :=
-           Self.Text.At_First_Line
-             (Terminators     => LSP_New_Line_Function_Set,
+           VSS.Strings.Line_Iterators.At_First
+             (Self.Text,
+              Terminators     => LSP_New_Line_Function_Set,
               Keep_Terminator => True);
          Last_Line_Terminated : Boolean := False;
 
@@ -190,8 +191,9 @@ package body LSP.Ada_Documents is
 
       M    : VSS.Strings.Markers.Character_Marker;
       J    : VSS.Strings.Line_Iterators.Line_Iterator :=
-        Self.Text.At_Line
-          (Position        => Start_Marker,
+        VSS.Strings.Line_Iterators.At_Position
+          (Self.Text,
+           Position        => Start_Marker,
            Terminators     => LSP_New_Line_Function_Set,
            Keep_Terminator => True);
       Line : LSP.Types.Line_Number := Low_Line;
