@@ -1,0 +1,14 @@
+name = "prettier_ada"
+description = "A library to create formatters for any language."
+version = "25.0.0-20240625"
+
+authors = ["AdaCore"]
+maintainers = ["João Azevedo <azevedo@adacore.com>"]
+maintainers-logins = ["joaopsazevedo"]
+licenses = "Apache-2.0"
+website = "https://github.com/AdaCore/prettier-ada"
+tags = ["format", "prettier"]
+
+[[depends-on]]
+gnatcoll         = "*"
+vss              = "*"
