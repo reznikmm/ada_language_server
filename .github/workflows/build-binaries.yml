@@ -14,12 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: # Build debug and/or production
-        debug: ['']      # '' if production, 'debug' for debug
-        os: [macos-11, ubuntu-20.04, windows-latest]
-        cross: ['', aarch64]
-        exclude:
-          - os: windows-latest
-            cross: aarch64
+        os: [ubuntu-20.04]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Setup Python
@@ -35,97 +30,24 @@ jobs:
           else
               echo "TAG=$DEFAULT_TAG" >> $GITHUB_ENV
           fi
-      - name: Install cross toolchain (Linux)
-        if: ${{ matrix.cross != '' && runner.os == 'Linux' }}
-        env:
-          AWS_ACCESS_KEY_ID: ${{secrets.GHA_CACHE_ACCESS_KEY_ID}}
-          AWS_SECRET_ACCESS_KEY: ${{secrets.GHA_CACHE_SECRET}}
-          AWS_DEFAULT_REGION: eu-west-1
-        run: |
-            sudo apt install -y libc6-dev-arm64-cross linux-libc-dev-arm64-cross binutils-aarch64-linux-gnu
-            aws s3 cp s3://adacore-gha-tray-eu-west-1/toolchain/${{ matrix.cross }}-${{ runner.os }}-gcc-13.2.tar.bz2 . --sse=AES256
-            aws s3 cp s3://adacore-gha-tray-eu-west-1/toolchain/${{ matrix.cross }}-${{ runner.os }}-gmp-6.2.1.tar.bz2 . --sse=AES256
-            sudo tar xjf ${{ matrix.cross }}-${{ runner.os }}-gcc-13.2.tar.bz2  -C /
-            sudo tar xjf ${{ matrix.cross }}-${{ runner.os }}-gmp-6.2.1.tar.bz2 -C /
-      - name: Install cross toolchain (MacOS)
-        if: ${{ matrix.cross != '' && runner.os != 'Linux' }}
-        env:
-          AWS_ACCESS_KEY_ID: ${{secrets.GHA_CACHE_ACCESS_KEY_ID}}
-          AWS_SECRET_ACCESS_KEY: ${{secrets.GHA_CACHE_SECRET}}
-          AWS_DEFAULT_REGION: eu-west-1
-        run: |
-            aws s3 cp s3://adacore-gha-tray-eu-west-1/toolchain/${{ matrix.cross }}-${{ runner.os }}-gcc-13.2.tar.bz2 . --sse=AES256
-            aws s3 cp s3://adacore-gha-tray-eu-west-1/toolchain/${{ matrix.cross }}-${{ runner.os }}-gmp-6.2.1.tar.bz2 . --sse=AES256
-            sudo tar xjf ${{ matrix.cross }}-${{ runner.os }}-gcc-13.2.tar.bz2  --strip-components=3 -C /usr/local
-            sudo tar xjf ${{ matrix.cross }}-${{ runner.os }}-gmp-6.2.1.tar.bz2 --strip-components=3 -C /usr/local
-      - name: Force Alire use preinstalled MSYS2
-        shell: bash
-        if: ${{ runner.os == 'Windows' }}
-        run: |
-          mkdir -p ~/.config/alire
-          echo '[msys2]' >> ~/.config/alire/config.toml
-          echo 'install_dir = "C:\\msys64"' >> ~/.config/alire/config.toml
-      - name: Install iconv and gmp (Windows only)
-        run: pacman --noconfirm -S mingw64/mingw-w64-x86_64-libiconv mingw64/mingw-w64-x86_64-gmp
-        if: ${{ runner.os == 'Windows' }}
-        shell: c:\msys64\usr\bin\bash.exe -l -e -o pipefail {0}
-        env:
-          MSYSTEM: MINGW64
       - name: Get als
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Get Spawn
-        uses: actions/checkout@v3
-        with:
-          repository: AdaCore/spawn
-          path: subprojects/spawn
-      - name: Get LAL_Tools
-        uses: actions/checkout@v3
-        with:
-          repository: AdaCore/libadalang-tools
-          path: subprojects/libadalang-tools
-      - name: Get Templates Parser
-        uses: actions/checkout@v3
-        with:
-          repository: AdaCore/templates-parser
-          path: subprojects/templates-parser
-      - name: Get GNATdoc
-        uses: actions/checkout@v3
-        with:
-          repository: AdaCore/gnatdoc
-          path: subprojects/gnatdoc
-          ref: edge
-      - name: Get LAL Refactor
-        uses: actions/checkout@v3
-        with:
-          repository: AdaCore/lal-refactor
-          path: subprojects/lal-refactor
-          ref: edge
-      - uses: actions/cache@v3
-        with:
-          path: ./cached_gnat
-          key: ${{ runner.os }}-alire-2023
-          restore-keys: ${{ runner.os }}-alire-2023
       - name: Get GNAT toolchain with alire
-        uses: alire-project/setup-alire@v2
+        uses: alire-project/setup-alire@v3
+        # TBD Get alr nightly build to have it on MacOS X!!!
         with:
-          toolchain: gnat_native^13 gprbuild^22
-          toolchain_dir: ./cached_gnat
+          version: "nightly"
+#          toolchain: gnat_native^14 gprbuild^22
       - name: Build
-        shell: bash
-        env:
-          AWS_ACCESS_KEY_ID: ${{secrets.GHA_CACHE_ACCESS_KEY_ID}}
-          AWS_SECRET_ACCESS_KEY: ${{secrets.GHA_CACHE_SECRET}}
         run: |
-          # This is to avoid locking .sh on win that prevents its updating
-          cp .github/workflows/build-binaries.sh .github/workflows/build-binaries.sh_
-          .github/workflows/build-binaries.sh_ "${{ matrix.debug }}" ${{ runner.os }} ${{ env.TAG }} "" "${{ matrix.cross }}"
+          scripts/build_als.sh all ${{ env.TAG }}
       - name: Archive ALS binary
         if: ${{ github.event_name == 'push' }}
         uses: actions/upload-artifact@v3
         with:
-          name: als-${{ runner.os }}-${{ matrix.debug }}${{ matrix.cross }}
+          name: als-${{ matrix.os }}
           # We know that only one of the following entries will match on a given
           # run, so we use globs here to try to avoid warnings on unmatched
           # entries
@@ -133,7 +55,7 @@ jobs:
             integration/vscode/ada/arm*
             integration/vscode/ada/x64*
   package:
-    if: ${{ github.event_name == 'push' }}
+    if: false
     needs: build
     runs-on: ubuntu-latest
     steps:
