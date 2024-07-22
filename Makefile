@@ -100,9 +100,12 @@ all: coverage-instrument
 	$(GPRBUILD) -P gnat/lsp_server.gpr -p $(COVERAGE_BUILD_FLAGS) \
 		-XVERSION=$(VERSION) -XBUILD_DATE=$(BUILD_DATE)
 	$(GPRBUILD) -P gnat/lsp_client.gpr -p $(COVERAGE_BUILD_FLAGS)
+	make copy
+
+copy:
 ifdef NODE
 	mkdir -p integration/vscode/ada/$(NODE_ARCH)/$(NODE_PLATFORM)
-	cp -f $(ALS) integration/vscode/ada/$(NODE_ARCH)/$(NODE_PLATFORM)
+	cp -v -f $(ALS) integration/vscode/ada/$(NODE_ARCH)/$(NODE_PLATFORM)
 endif
 
 generate:
@@ -160,7 +163,7 @@ vscode-test:
 vscode-package:
 	cd integration/vscode/ada; LD_LIBRARY_PATH= $(VSCE) package
 
-check: all
+check:
 	set -e; \
         export PYTHON=$(PYTHON); \
         if [ `$(PYTHON) -c "import e3,sys;print('e3' in sys.modules)"` = "True" ]; then\
