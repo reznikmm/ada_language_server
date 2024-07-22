@@ -11,6 +11,16 @@ licenses = "Apache-2.0"
 
 project-files = ["gnat/markdown.gpr"]
 
+[[actions]]
+type = "post-fetch"
+command = [
+  "sed",
+  "-i.bak",
+  "-e",
+  '/-g/s/-g"/-g", "-Ofast"/',
+  "gnat/markdown.gpr"
+]
+
 [configuration]
 disabled = true
 

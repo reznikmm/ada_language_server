@@ -9,8 +9,17 @@ maintainers-logins = ["godunko", "reznikmm"]
 licenses = "GPL-3.0-or-later WITH GCC-exception-3.1"
 website = "https://github.com/AdaCore/gnatdoc"
 
-executables = ["bin/gnatdoc"]
-project-files = ["gnat/gnatdoc.gpr"]
+project-files = ["gnat/libgnatdoc.gpr"]
+
+[[actions]]
+type = "post-fetch"
+command = [
+  "sed",
+  "-i.bak",
+  "-e",
+  's/gnatwa/gnatwa", "-Ofast/',
+  "gnat/libgnatdoc.gpr"
+]
 
 [configuration]
 disabled = true

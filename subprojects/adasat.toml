@@ -18,3 +18,13 @@ tags = ["sat", "solver", "theories"]
 
 [configuration]
 disabled = true
+
+[[actions]]
+type = "post-fetch"
+command = [
+  "sed",
+  "-i.bak",
+  's/, "-flto"//',
+  "adasat.gpr"
+]
+
