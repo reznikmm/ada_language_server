@@ -45,7 +45,18 @@ SETENV=$PWD/subprojects/libadalang/setenv.sh
 # Extra arguments for gprbuild in ALS build
 ALS_GARGS=""
 
-# Install custom Alire with missing crates
+# Set `prod` build mode
+########################
+# for adasat,lal,langkit,lal_refactor,laltools,markdown,spawn
+export BUILD_MODE=prod
+# for others
+export GNATCOLL_BUILD_MODE=PROD
+export GPR_BUILD=production
+export GPR2_BUILD=release
+export VSS_BUILD_PROFILE=release
+export PRETTIER_ADA_BUILD_MODE=prod
+
+# Install custom Alire index with missing crates
 function install_index()
 {
     alr index --del=als || true
