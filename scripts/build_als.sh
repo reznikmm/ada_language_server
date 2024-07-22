@@ -72,6 +72,7 @@ function pin_crates() {
         cp -v subprojects/$crate.toml subprojects/${crate}/alire.toml
         alr --force --non-interactive pin $crate --use=$PWD/subprojects/${crate}
     done
+    alr toolchain --select gprbuild^24
     alr action -r post-fetch # Configure XmlAda, etc
 }
 
@@ -99,8 +100,9 @@ function build_so() {
 
 # Build ALS with alire
 function build_als() {
-    unset OS
     LIBRARY_TYPE=static STANDALONE=no alr build -- $ALS_GARGS
+    alr exec make -- copy
+    alr exec make -- check || true
 }
 
 # Setup venv for python
