@@ -57,22 +57,20 @@ export VSS_BUILD_PROFILE=release
 export PRETTIER_ADA_BUILD_MODE=prod
 
 # Install custom Alire index with missing crates
-function install_index()
-{
+function install_index() {
     alr index --del=als || true
     alr index --add=$PWD --name=als
 }
 
 # Clone dependencies
-function pin_crates()
-{
-    for crate in $PINS ; do
-	    declare -n repo=repo_${crate}
-	    declare -n branch=branch_${crate}
+function pin_crates() {
+    for crate in $PINS; do
+        declare -n repo=repo_${crate}
+        declare -n branch=branch_${crate}
         GIT="git clone --depth=1"
-	    $GIT -b ${branch:-master} https://github.com/AdaCore/${repo:-$crate}.git subprojects/${crate}
-	    cp -v subprojects/$crate.toml subprojects/${crate}/alire.toml
-	    alr --force --non-interactive pin $crate --use=$PWD/subprojects/${crate}
+        $GIT -b ${branch:-master} https://github.com/AdaCore/${repo:-$crate}.git subprojects/${crate}
+        cp -v subprojects/$crate.toml subprojects/${crate}/alire.toml
+        alr --force --non-interactive pin $crate --use=$PWD/subprojects/${crate}
     done
     alr action -r post-fetch # Configure XmlAda, etc
 }
@@ -80,30 +78,27 @@ function pin_crates()
 # Build langkit shared libraries required to generate libadalang.
 # Export setenv to $SETENV
 # Clean `.ali` and `.o` to avoid static vis relocatable mess
-function build_so_raw()
-{
+function build_so_raw() {
     cd subprojects/langkit_support
     sed -i.bak -e 's/GPR_BUILD/GPR_LIBRARY_TYPE/' ./langkit/libmanage.py
     pip install .
     unset OS
     LIBRARY_PATH=relocatable \
-		python manage.py make --no-mypy \
-		--library-types=relocatable --gargs "-cargs -fPIC"
-    python manage.py setenv > $SETENV
+        python manage.py make --no-mypy \
+        --library-types=relocatable --gargs "-cargs -fPIC"
+    python manage.py setenv >$SETENV
     cd -
     find . -name '*.o' -delete
     find . -name '*.ali' -delete
 }
 
 # Run build_so_raw in Alire environment
-function build_so()
-{
+function build_so() {
     alr exec $0 -- build_so_raw
 }
 
 # Build ALS with alire
-function build_als()
-{
+function build_als() {
     unset OS
     LIBRARY_TYPE=static STANDALONE=no alr build -- $ALS_GARGS
 }
@@ -113,31 +108,31 @@ function build_als()
 . venv/bin/activate
 
 case ${1:-all} in
-    all)
-	install_index
-	pin_crates
-	build_so
-	build_als
-	;;
+all)
+    install_index
+    pin_crates
+    build_so
+    build_als
+    ;;
 
-    install_index)
-	install_index
-	;;
+install_index)
+    install_index
+    ;;
 
-    pin_crates)
-	pin_crates
-	;;
+pin_crates)
+    pin_crates
+    ;;
 
-    build_so)
-	build_so
-	;;
+build_so)
+    build_so
+    ;;
 
-    build_so_raw)
-	build_so_raw
-	;;
+build_so_raw)
+    build_so_raw
+    ;;
 
-    build_als)
-	build_als
-	;;
+build_als)
+    build_als
+    ;;
 
 esac
