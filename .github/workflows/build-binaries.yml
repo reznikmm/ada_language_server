@@ -41,6 +41,9 @@ jobs:
         with:
           version: "nightly"
 #          toolchain: gnat_native^14 gprbuild^22
+      - name: Install GMP (MacOS X)
+        if: ${{ runner.os == 'macOS' }}
+        run: brew install gmp
       - name: Build
         run: |
           scripts/build_als.sh all ${{ env.TAG }}

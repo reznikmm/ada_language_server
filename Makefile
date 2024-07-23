@@ -169,7 +169,7 @@ vscode-test:
 vscode-package:
 	cd integration/vscode/ada; LD_LIBRARY_PATH= $(VSCE) package
 
-check:
+check: all
 	set -e; \
         export PYTHON=$(PYTHON); \
         if [ `$(PYTHON) -c "import e3,sys;print('e3' in sys.modules)"` = "True" ]; then\
