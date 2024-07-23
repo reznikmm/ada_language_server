@@ -17,25 +17,14 @@ function make_change_log() {
 
 function os_to_node_platform() {
    case "$1" in
-   Linux)
-      echo -n "linux"
+   ubuntu*)
+      echo -n "linux-x64"
       ;;
-   Windows)
-      echo -n "win32"
+   macos-12)
+      echo -n "darwin-x64"
       ;;
-   macOS)
-      echo -n "darwin"
-      ;;
-   esac
-}
-
-function cross_to_node_arch() {
-   case "$1" in
-   aarch64)
-      echo -n "arm64"
-      ;;
-   *)
-      echo -n "x64"
+   macos-14)
+      echo -n "darwin-arm64"
       ;;
    esac
 }
@@ -58,30 +47,30 @@ ext_dir=integration/vscode/ada
    make_change_log >CHANGELOG.md
 )
 
+ls -l
+
 # At the moment we only create VSIX-es for macOS on GitHub. Other platforms are
 # provided elsewhere.
 # shellcheck disable=SC2043
-for OS in macOS Windows Linux; do
-   for CROSS in "" "aarch64"; do
-      source=als-"$OS"-"$CROSS"
-      if [ -d "$source" ]; then
-         # Make sure the file are executable
-         chmod -R -v +x "$source"
-         # Copy the binary in place
-         rsync -rva als-$OS-"$CROSS"/ "$ext_dir"/
-         # Delete debug info
-         rm -rf -v "$ext_dir"/{arm,arm64,x64}/{linux,darwin,win32}/*.{debug,dSYM}
+for OS in macos-12 macos-14 ubuntu-20.04; do
+   source=als-"$OS"
+   if [ -d "$source" ]; then
+      # Make sure the file are executable
+      chmod -R -v +x "$source"
+      # Copy the binary in place
+      rsync -rva "$source"/ "$ext_dir"/
+      # Delete debug info
+      rm -rf -v "$ext_dir"/{arm,arm64,x64}/{linux,darwin,win32}/*.{debug,dSYM}
 
-         (
-            cd "$ext_dir"
-            # Create the VSIX
-            npx vsce package --target "$(os_to_node_platform $OS)-$(cross_to_node_arch $CROSS)"
-         )
+      (
+         cd "$ext_dir"
+         # Create the VSIX
+         npx vsce package --target "$(os_to_node_platform_arch $OS)"
+      )
 
-         # Cleanup the binary directory
-         rm -rf -v "$ext_dir"/{arm,arm64,x64}
-      fi
-   done
+      # Cleanup the binary directory
+      rm -rf -v "$ext_dir"/{arm,arm64,x64}
+   fi
 done
 
 # Move all .vsix packages to the root of the checkout

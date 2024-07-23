@@ -8,7 +8,6 @@ on:
 name: Build binaries
 env:
   DEFAULT_TAG: 24.0.999
-  AWS_DEFAULT_REGION: eu-west-1
 jobs:
   build:
     name: Build and deploy
@@ -58,7 +57,7 @@ jobs:
             integration/vscode/ada/arm*
             integration/vscode/ada/x64*
   package:
-    if: false
+    if: ${{ github.event_name == 'push' }}
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -81,5 +80,5 @@ jobs:
       - name: Archive ALS vsix
         uses: actions/upload-artifact@v3
         with:
-          name: als-vsix-${{ matrix.debug }}${{ env.TAG }}
+          name: als-vsix-${{ env.TAG }}
           path: '*.vsix'
