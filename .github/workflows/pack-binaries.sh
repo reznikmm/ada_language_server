@@ -15,7 +15,7 @@ function make_change_log() {
    done
 }
 
-function os_to_node_platform() {
+function os_to_node_platform_arch() {
    case "$1" in
    ubuntu*)
       echo -n "linux-x64"
@@ -65,9 +65,7 @@ for OS in macos-12 macos-14 ubuntu-20.04; do
       (
          cd "$ext_dir"
          # Create the VSIX
-         TARGET="$(os_to_node_platform_arch $OS)"
-         npx vsce package --target "$TARGET"
-         mv -v ./*.vsix ada-$TARGET-$TAG.vsix
+         npx vsce package --target "$(os_to_node_platform_arch $OS)"
       )
 
       # Cleanup the binary directory
