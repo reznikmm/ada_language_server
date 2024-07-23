@@ -5,6 +5,8 @@ on:
       - topic/alr_ci
     tags:
       - 2*.*.*
+  workflow_dispatch:
+
 name: Build binaries
 env:
   DEFAULT_TAG: 24.0.999

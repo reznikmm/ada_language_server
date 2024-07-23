@@ -139,13 +139,13 @@ function do_fix_rpath() {
     install_name_tool -add_rpath @executable_path "$1"
 }
 
+# Get architecture and platform information from node.
+NODE_PLATFORM=$(node -e "console.log(process.platform)")
+NODE_ARCH=$(node -e "console.log(process.arch)")
+ALS_EXEC_DIR=integration/vscode/ada/$NODE_ARCH/$NODE_PLATFORM
+
 function fix_rpath() {
     if [ "$RUNNER_OS" = macOS ]; then
-        # Get architecture and platform information from node.
-        NODE_PLATFORM=$(node -e "console.log(process.platform)")
-        NODE_ARCH=$(node -e "console.log(process.arch)")
-        ALS_EXEC_DIR=integration/vscode/ada/$NODE_ARCH/$NODE_PLATFORM
-
         # Get full path of libgmp as linked in the ALS exec
         gmp_full_path=$(get_gmp_full_path $ALS_EXEC_DIR/ada_language_server)
         if [ -f "$gmp_full_path" ]; then
@@ -155,6 +155,32 @@ function fix_rpath() {
         # Fix rpath entries of the ALS exec so it can find libgmp alongside it
         do_fix_rpath "$ALS_EXEC_DIR/ada_language_server"
     fi
+}
+
+function strip_debug() {
+    cd "$ALS_EXEC_DIR"
+
+    if [ "$RUNNER_OS" = Windows ]; then
+        ALS=ada_language_server.exe
+    else
+        ALS=ada_language_server
+    fi
+
+    if [ "$RUNNER_OS" = macOS ]; then
+        # On macOS using objcopy from binutils to strip debug symbols to a
+        # separate file doesn't work. Namely, the last step `objcopy
+        # --add-gnu-debuglink` yields an executable that crashes at startup.
+        #
+        # Instead we use dsymutil and strip which are commands provided by the
+        # system (or by XCode).
+        dsymutil "$ALS"
+        strip "$ALS"
+    else
+        objcopy --only-keep-debug ${ALS} ${ALS}.debug
+        objcopy --strip-all ${ALS}
+        objcopy --add-gnu-debuglink=${ALS}.debug ${ALS}
+    fi
+    cd -
 }
 
 # Setup venv for python
@@ -170,6 +196,7 @@ all)
     build_so
     build_als
     fix_rpath
+    strip_debug
     ;;
 
 install_index)
@@ -196,4 +223,7 @@ fix_rpath)
     fix_rpath
     ;;
 
+strip_debug)
+    strip_debug
+    ;;
 esac
