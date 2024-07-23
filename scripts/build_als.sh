@@ -119,8 +119,47 @@ function build_als() {
     LIBRARY_TYPE=static STANDALONE=no alr exec make -- VERSION=$TAG check
 }
 
+# Find the path to libgmp as linked in the given executable
+function get_gmp_full_path() {
+    otool -l "$1" | grep '^\s*name.*libgmp.10.dylib' | awk '/ name /{print $2 }'
+}
+
+function do_fix_rpath() {
+    # Remove all rpath entries
+    for R in $(otool -l "$1" | grep -A2 LC_RPATH | awk '/ path /{ print $2 }'); do
+        install_name_tool -delete_rpath "$R" "$1"
+    done
+    # Change reference to full path of libgmp into a reference to the rpath.
+    gmp_full_path=$(get_gmp_full_path "$1")
+    if [ -n "$gmp_full_path" ]; then
+        install_name_tool -change "$gmp_full_path" @rpath/libgmp.10.dylib "$1"
+    fi
+    # Add the executable directory to rpath so it can find shared libraries
+    # packaged alongside the executable.
+    install_name_tool -add_rpath @executable_path "$1"
+}
+
+function fix_rpath() {
+    if [ "$RUNNER_OS" = macOS ]; then
+        # Get architecture and platform information from node.
+        NODE_PLATFORM=$(node -e "console.log(process.platform)")
+        NODE_ARCH=$(node -e "console.log(process.arch)")
+        ALS_EXEC_DIR=integration/vscode/ada/$NODE_ARCH/$NODE_PLATFORM
+
+        # Get full path of libgmp as linked in the ALS exec
+        gmp_full_path=$(get_gmp_full_path $ALS_EXEC_DIR/ada_language_server)
+        if [ -f "$gmp_full_path" ]; then
+            # Copy libgmp alongside the ALS exec
+            cp -v -f "$gmp_full_path" "$ALS_EXEC_DIR"
+        fi
+        # Fix rpath entries of the ALS exec so it can find libgmp alongside it
+        do_fix_rpath "$ALS_EXEC_DIR/ada_language_server"
+    fi
+}
+
 # Setup venv for python
 [ -d venv ] || python3 -m venv venv
+# shellcheck source=/dev/null
 . venv/bin/activate
 pip3 install e3-testsuite
 
@@ -130,6 +169,7 @@ all)
     pin_crates
     build_so
     build_als
+    fix_rpath
     ;;
 
 install_index)
@@ -150,6 +190,10 @@ build_so_raw)
 
 build_als)
     build_als
+    ;;
+
+fix_rpath)
+    fix_rpath
     ;;
 
 esac
