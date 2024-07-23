@@ -1,9 +1,8 @@
 #!/bin/bash
 set -x -e
-DEBUG=$1 # Value is '' or 'debug'
-VSCE_TOKEN=$2
-OVSX_TOKEN=$3
-TAG=$4 # For master it's 24.0.999, while for tag it's the tag itself
+VSCE_TOKEN=$1
+OVSX_TOKEN=$2
+TAG=$3 # For master it's 24.0.999, while for tag it's the tag itself
 
 function make_change_log() {
    echo "# Release notes"
@@ -48,9 +47,6 @@ ext_dir=integration/vscode/ada
 
    # Set package version based on the Git tag
    sed -i -e "/version/s/[0-9][0-9.]*/$TAG/" package.json
-   # Change extension ID and name if we're in debug mode
-   [ -z "$DEBUG" ] || sed -i -e '/^    "name"/s/ada/ada-debug/' \
-      -e '/displayName/s/Ada & SPARK/Ada & SPARK (with debug info)/' package.json
 
    # Install NPM deps
    npm -v
@@ -67,12 +63,12 @@ ext_dir=integration/vscode/ada
 # shellcheck disable=SC2043
 for OS in macOS Windows Linux; do
    for CROSS in "" "aarch64"; do
-      source=als-"$OS"-"$DEBUG""$CROSS"
+      source=als-"$OS"-"$CROSS"
       if [ -d "$source" ]; then
          # Make sure the file are executable
          chmod -R -v +x "$source"
          # Copy the binary in place
-         rsync -rva als-$OS-"$DEBUG""$CROSS"/ "$ext_dir"/
+         rsync -rva als-$OS-"$CROSS"/ "$ext_dir"/
          # Delete debug info
          rm -rf -v "$ext_dir"/{arm,arm64,x64}/{linux,darwin,win32}/*.{debug,dSYM}
 
