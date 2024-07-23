@@ -15,6 +15,9 @@ disabled = true
 [environment]
 GPR_PROJECT_PATH.prepend = "${CRATE_ROOT}/core:${CRATE_ROOT}/projects:${CRATE_ROOT}/minimal"
 
+[environment.'case(os)'.macos.DYLD_LIBRARY_PATH]
+append = "${CRATE_ROOT}/projects/lib/gnatcoll_projects/relocatable:${CRATE_ROOT}/core/lib/gnatcoll_core/relocatable:${CRATE_ROOT}/minimal/lib/gnatcoll_core/relocatable"
+
 [gpr-externals]
 GNATCOLL_ATOMICS = ["intrinsic", "mutex"]
 GNATCOLL_BUILD_MODE = ["DEBUG", "PROD"]
