@@ -36,7 +36,8 @@ jobs:
         with:
           fetch-depth: 0
       - name: Get GNAT toolchain with alire
-        uses: alire-project/setup-alire@v3
+        uses: reznikmm/setup-alire@v4
+        #uses: alire-project/setup-alire@v3
         # TBD Get alr nightly build to have it on MacOS X!!!
         with:
           version: "nightly"
