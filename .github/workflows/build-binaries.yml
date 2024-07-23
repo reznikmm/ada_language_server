@@ -42,12 +42,10 @@ jobs:
         with:
           version: "nightly"
           toolchain: gnat_native^14 #gprbuild^22
-      - name: Install GMP (MacOS X)
-        if: ${{ runner.os == 'macOS' }}
-        run: brew install gmp
       - name: Build
         run: |
-          scripts/build_als.sh all ${{ env.TAG }}
+          alr settings --global --set toolchain.external.gprbuild false
+          scripts/build_als.sh all ${{ env.TAG }} || cat alire/cache/dependencies/gnatcoll_iconv_24.0.0_e90c5b4d/alire/build_hash_inputs
       - name: Archive ALS binary
         if: ${{ github.event_name == 'push' }}
         uses: actions/upload-artifact@v3
