@@ -37,23 +37,36 @@ echo "upload_url=$upload_url"
 
 chmod -R -v +x als-*-
 
-for CROSS in "" "aarch64"; do
-   for X in Linux macOS Windows; do
-      FILE=als-$TAG-$X_${CROSS:-amd64}.zip
-      if [ -d als-$X-$CROSS ]; then
-         cd als-$X-$CROSS
-         zip -9 -r ../$FILE .
-         cd ..
+function os_to_node_platform() {
+   case "$1" in
+   ubuntu*)
+      echo -n "linux-x64"
+      ;;
+   macos-12)
+      echo -n "darwin-x64"
+      ;;
+   macos-14)
+      echo -n "darwin-arm64"
+      ;;
+   esac
+}
 
-         # Upload $FILE as an asset to the release
-         curl \
-            -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: token $GITHUB_ACCESS_TOKEN" \
-            -H 'Content-Type: application/zip' \
-            --data-binary @$FILE \
-            $upload_url?name=$FILE
-         rm -v -f $FILE
-      fi
-   done
+for OS in macos-12 macos-14 ubuntu-20.04; do
+   FILE=als-$TAG-"$(os_to_node_platform_arch $OS)".zip
+   source=als-"$OS"
+   if [ -d "$source" ]; then
+      cd "$source"
+      zip -9 -r ../$FILE .
+      cd ..
+
+      # Upload $FILE as an asset to the release
+      curl \
+         -X POST \
+         -H "Accept: application/vnd.github+json" \
+         -H "Authorization: token $GITHUB_ACCESS_TOKEN" \
+         -H 'Content-Type: application/zip' \
+         --data-binary @$FILE \
+         $upload_url?name=$FILE
+      rm -v -f $FILE
+   fi
 done
