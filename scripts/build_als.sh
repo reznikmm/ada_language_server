@@ -42,9 +42,6 @@ branch_prettier_ada=main
 # A temporary file for langkit setevn
 SETENV=$PWD/subprojects/libadalang/setenv.sh
 
-# Extra arguments for gprbuild in ALS build
-ALS_GARGS=""
-
 # Set `prod` build mode
 ########################
 # for adasat,lal,langkit,lal_refactor,laltools,markdown,spawn
@@ -65,13 +62,19 @@ function install_index() {
 # Clone dependencies
 function pin_crates() {
     for crate in $PINS; do
-        declare -n repo=repo_${crate}
-        declare -n branch=branch_${crate}
+        repo_var=repo_$crate
+        branch_var=branch_$crate
+
+        repo=${!repo_var}
+        branch=${!branch_var}
+
+        URL="https://github.com/AdaCore/${repo:-$crate}.git"
         GIT="git clone --depth=1"
-        $GIT -b ${branch:-master} https://github.com/AdaCore/${repo:-$crate}.git subprojects/${crate}
-        cp -v subprojects/$crate.toml subprojects/${crate}/alire.toml
-        alr --force --non-interactive pin $crate --use=$PWD/subprojects/${crate}
+        $GIT -b ${branch:-master} $URL subprojects/$crate
+        cp -v subprojects/$crate.toml subprojects/$crate/alire.toml
+        alr --force --non-interactive pin $crate --use=$PWD/subprojects/$crate
     done
+    # Install gprbuild from our index. We need it for Mac OS X ARM64
     alr toolchain --select gprbuild^24
     alr action -r post-fetch # Configure XmlAda, etc
 }
@@ -83,9 +86,7 @@ function build_so_raw() {
     cd subprojects/langkit_support
     sed -i.bak -e 's/GPR_BUILD/GPR_LIBRARY_TYPE/' ./langkit/libmanage.py
     pip install .
-    unset OS
-    LIBRARY_PATH=relocatable \
-        python manage.py make --no-mypy \
+    python manage.py make --no-mypy \
         --library-types=relocatable --gargs "-cargs -fPIC"
     python manage.py setenv >$SETENV
     cd -
@@ -95,14 +96,12 @@ function build_so_raw() {
 
 # Run build_so_raw in Alire environment
 function build_so() {
-    alr exec $0 -- build_so_raw
+    LIBRARY_PATH=relocatable alr exec $0 -- build_so_raw
 }
 
 # Build ALS with alire
 function build_als() {
-    LIBRARY_TYPE=static STANDALONE=no alr build -- $ALS_GARGS
-    alr exec make -- copy
-    alr exec make -- check || true
+    LIBRARY_TYPE=static STANDALONE=no alr exec make -- check
 }
 
 # Setup venv for python

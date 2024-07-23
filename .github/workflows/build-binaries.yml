@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - edge
+      - topic/alr_ci
     tags:
       - 2*.*.*
 name: Build binaries
