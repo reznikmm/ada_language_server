@@ -41,7 +41,7 @@ jobs:
         # TBD Get alr nightly build to have it on MacOS X!!!
         with:
           version: "nightly"
-#          toolchain: gnat_native^14 gprbuild^22
+          toolchain: gnat_native^14 #gprbuild^22
       - name: Install GMP (MacOS X)
         if: ${{ runner.os == 'macOS' }}
         run: brew install gmp
