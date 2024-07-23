@@ -2,6 +2,8 @@
 
 set -e -x
 
+TAG=$2 # For master it's 24.0.999, while for tag it's the tag itself
+
 # Crates to pin from GitHub repo
 
 PINS="
@@ -101,12 +103,13 @@ function build_so() {
 
 # Build ALS with alire
 function build_als() {
-    LIBRARY_TYPE=static STANDALONE=no alr exec make -- check
+    LIBRARY_TYPE=static STANDALONE=no alr exec make -- VERSION=$TAG check
 }
 
 # Setup venv for python
 [ -d venv ] || python3 -m venv venv
 . venv/bin/activate
+pip3 install e3-testsuite
 
 case ${1:-all} in
 all)
