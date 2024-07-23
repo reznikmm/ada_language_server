@@ -103,7 +103,26 @@ function build_so() {
 
 # Build ALS with alire
 function build_als() {
-    LIBRARY_TYPE=static STANDALONE=no alr -v -v exec make -- VERSION=$TAG check
+    ADALIB=$(dirname "$(alr exec gcc -- -print-libgcc-file-name)")/adalib
+    LIBGCC=$(dirname "$(alr exec gcc -- -print-file-name=libgcc_s.so.1)")
+
+    export DYLD_LIBRARY_PATH=$ADALIB:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$LIBGCC:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/subprojects/prettier_ada/lib/relocatable/prod:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/subprojects/vss/.libs/relocatable:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/alire/cache/dependencies/gnatcoll_iconv_24.0.0_e90c5b4d/iconv/lib/relocatable:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/alire/cache/dependencies/gnatcoll_gmp_24.0.0_e90c5b4d/gmp/lib/relocatable:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/subprojects/gnatcoll/projects/lib/gnatcoll_projects/relocatable:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/subprojects/libgpr/gpr/lib/production/relocatable:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/alire/cache/dependencies/xmlada_24.0.0_ae5a015b/schema/lib/relocatable:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/alire/cache/dependencies/xmlada_24.0.0_ae5a015b/dom/lib/relocatable:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/alire/cache/dependencies/xmlada_24.0.0_ae5a015b/sax/lib/relocatable:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/alire/cache/dependencies/xmlada_24.0.0_ae5a015b/input_sources/lib/relocatable:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/alire/cache/dependencies/xmlada_24.0.0_ae5a015b/unicode/lib/relocatable:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/subprojects/gnatcoll/core/lib/gnatcoll_core/relocatable:$DYLD_LIBRARY_PATH
+    export DYLD_LIBRARY_PATH=$PWD/subprojects/gnatcoll/minimal/lib/gnatcoll_core/relocatable:$DYLD_LIBRARY_PATH
+
+    LIBRARY_TYPE=static STANDALONE=no alr exec make -- VERSION=$TAG check
 }
 
 # Setup venv for python
