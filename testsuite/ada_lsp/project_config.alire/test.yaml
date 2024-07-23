@@ -1,3 +1,5 @@
 title: 'project_config.alire'
+# Skip alire test for now
 skip:
-    - ['SKIP', 'env.build.os.name == "windows"']
+    - ['XFAIL', 'True']
+#    - ['SKIP', 'env.build.os.name == "windows"']

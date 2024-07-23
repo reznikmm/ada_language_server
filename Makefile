@@ -93,16 +93,22 @@ else
 		-gnatyN
 endif
 
+ifeq ($(ALIRE),True)
+	# Let Alire set correct build mode and library type flags
+	COVERAGE_BUILD_FLAGS=
+	BUILD_FLAGS=
+endif
+
 all: coverage-instrument
+ifeq ($(ALIRE),True)
+	alr build -- -XVERSION=$(VERSION) -XBUILD_DATE=$(BUILD_DATE) $(GPRBUILD_FLAGS)
+endif
 	$(GPRBUILD) -P gnat/lsp_3_17.gpr -p $(COVERAGE_BUILD_FLAGS)
 	$(GPRBUILD) -P gnat/tester.gpr -p $(BUILD_FLAGS)
 	$(GPRBUILD) -d -ws -c -u -P gnat/lsp_server.gpr -p $(BUILD_FLAGS) s-memory.adb
 	$(GPRBUILD) -P gnat/lsp_server.gpr -p $(COVERAGE_BUILD_FLAGS) \
 		-XVERSION=$(VERSION) -XBUILD_DATE=$(BUILD_DATE)
 	$(GPRBUILD) -P gnat/lsp_client.gpr -p $(COVERAGE_BUILD_FLAGS)
-	make copy
-
-copy:
 ifdef NODE
 	mkdir -p integration/vscode/ada/$(NODE_ARCH)/$(NODE_PLATFORM)
 	cp -v -f $(ALS) integration/vscode/ada/$(NODE_ARCH)/$(NODE_PLATFORM)
