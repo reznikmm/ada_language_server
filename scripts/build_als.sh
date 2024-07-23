@@ -103,7 +103,7 @@ function build_so() {
 
 # Build ALS with alire
 function build_als() {
-    LIBRARY_TYPE=static STANDALONE=no alr exec make -- VERSION=$TAG check
+    LIBRARY_TYPE=static STANDALONE=no alr -v -v exec make -- VERSION=$TAG check
 }
 
 # Setup venv for python

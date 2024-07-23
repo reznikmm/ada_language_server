@@ -44,8 +44,9 @@ jobs:
           toolchain: gnat_native^14 #gprbuild^22
       - name: Build
         run: |
-          alr settings --global --set toolchain.external.gprbuild false
-          scripts/build_als.sh all ${{ env.TAG }} || cat alire/cache/dependencies/gnatcoll_iconv_24.0.0_e90c5b4d/alire/build_hash_inputs
+          alr settings --global --set dependencies.shared false
+          scripts/build_als.sh all ${{ env.TAG }} || true
+          cat alire/cache/dependencies/gnatcoll_iconv_24.0.0_e90c5b4d/alire/build_hash_inputs || true
       - name: Archive ALS binary
         if: ${{ github.event_name == 'push' }}
         uses: actions/upload-artifact@v3
