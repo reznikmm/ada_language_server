@@ -65,7 +65,9 @@ for OS in macos-12 macos-14 ubuntu-20.04; do
       (
          cd "$ext_dir"
          # Create the VSIX
-         npx vsce package --target "$(os_to_node_platform_arch $OS)"
+         TARGET="$(os_to_node_platform_arch $OS)"
+         npx vsce package --target "$TARGET"
+         mv -v ./*.vsix ada-$TARGET-$TAG.vsix
       )
 
       # Cleanup the binary directory
