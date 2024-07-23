@@ -9,6 +9,9 @@ licenses = "Apache-2.0"
 website = "https://github.com/AdaCore/prettier-ada"
 tags = ["format", "prettier"]
 
+[environment.'case(os)'.macos.DYLD_LIBRARY_PATH]
+append = "${CRATE_ROOT}/lib/relocatable/prod"
+
 [[depends-on]]
 gnatcoll         = "*"
 vss              = "*"

@@ -14,6 +14,9 @@ disabled = true
 GPR_BUILD = ["debug", "production", "coverage", "profiling"]
 LIBRARY_TYPE = ["static", "relocatable", "static-pic"]
 
+[environment.'case(os)'.macos.DYLD_LIBRARY_PATH]
+append = "${CRATE_ROOT}/gpr/lib/production/relocatable"
+
 [[actions]]
 type = "post-fetch"
 command = [
