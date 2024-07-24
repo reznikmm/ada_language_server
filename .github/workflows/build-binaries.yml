@@ -39,21 +39,16 @@ jobs:
       - name: Get GNAT toolchain with alire
         uses: reznikmm/setup-alire@v4
         #uses: alire-project/setup-alire@v3
-        # TBD Get alr nightly build to have it on MacOS X!!!
+        # Get alr nightly build to have it on MacOS X
         with:
           version: "nightly"
-          toolchain: gnat_native^14 #gprbuild^22
+          toolchain: gnat_native^14 #gprbuild^22 # no gprbuild for ARM64
       - name: Build
         run: |
           alr settings --global --set dependencies.shared false
           scripts/build_als.sh all "$TAG"
-          .github/workflows/pack-binaries.sh "$TAG"
-          if [[ ${GITHUB_REF##*/} = 2*.[0-9]*.[0-9]* ]]; then
-              .github/workflows/release.sh "${{ secrets.GITHUB_TOKEN }}" "$TAG"
-          fi
       - name: Archive ALS binary
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: als-${{ matrix.os }}
           # We know that only one of the following entries will match on a given
@@ -62,4 +57,19 @@ jobs:
           path: |
             integration/vscode/ada/arm*
             integration/vscode/ada/x64*
-            path: "*.vsix"
+      - name: Package
+        run: |
+          .github/workflows/pack-binaries.sh "$TAG"
+          if [[ ${GITHUB_REF##*/} = 2*.[0-9]*.[0-9]* ]]; then
+              .github/workflows/release.sh "${{ secrets.GITHUB_TOKEN }}" "$TAG"
+          fi
+      - name: Archive ALS binary
+        if: ${{ github.event_name == 'push' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: vsix-${{ matrix.os }}
+          # We know that only one of the following entries will match on a given
+          # run, so we use globs here to try to avoid warnings on unmatched
+          # entries
+          path: |
+            *.vsix
