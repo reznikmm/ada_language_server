@@ -1,8 +1,6 @@
 #!/bin/bash
 set -x -e
-VSCE_TOKEN=$1
-OVSX_TOKEN=$2
-TAG=$3 # For master it's 24.0.999, while for tag it's the tag itself
+TAG=$1 # For master it's 24.0.999, while for tag it's the tag itself
 
 function make_change_log() {
    echo "# Release notes"
@@ -15,20 +13,8 @@ function make_change_log() {
    done
 }
 
-function os_to_node_platform_arch() {
-   case "$1" in
-   ubuntu*)
-      echo -n "linux-x64"
-      ;;
-   macos-12)
-      echo -n "darwin-x64"
-      ;;
-   macos-14)
-      echo -n "darwin-arm64"
-      ;;
-   esac
-}
-
+NODE_PLATFORM=$(node -e "console.log(process.platform)")
+NODE_ARCH=$(node -e "console.log(process.arch)")
 ext_dir=integration/vscode/ada
 
 (
@@ -43,37 +29,13 @@ ext_dir=integration/vscode/ada
    which node
    npm install
 
+   # Delete debug info
+   rm -rf -v {arm,arm64,x64}/{linux,darwin,win32}/*.{debug,dSYM}
    # Create change log
    make_change_log >CHANGELOG.md
+   # Create the VSIX
+   npx vsce package --target "${NODE_PLATFORM}-${NODE_ARCH}"
 )
-
-ls -l
-
-# At the moment we only create VSIX-es for macOS on GitHub. Other platforms are
-# provided elsewhere.
-# shellcheck disable=SC2043
-for OS in macos-12 macos-14 ubuntu-20.04; do
-   source=als-"$OS"
-   if [ -d "$source" ]; then
-      # Make sure the file are executable
-      chmod -R -v +x "$source"
-      # Copy the binary in place
-      rsync -rva "$source"/ "$ext_dir"/
-      # Delete debug info
-      rm -rf -v "$ext_dir"/{arm,arm64,x64}/{linux,darwin,win32}/*.{debug,dSYM}
-
-      (
-         cd "$ext_dir"
-         # Create the VSIX
-         npx vsce package --target "$(os_to_node_platform_arch $OS)"
-      )
-
-      # Cleanup the binary directory
-      rm -rf -v "$ext_dir"/{arm,arm64,x64}
-   fi
-done
 
 # Move all .vsix packages to the root of the checkout
 mv -v "$ext_dir"/*.vsix .
-# Discard the package.json and package-lock.json changes
-git checkout "$ext_dir"/package*.json
