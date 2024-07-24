@@ -46,7 +46,11 @@ jobs:
       - name: Build
         run: |
           alr settings --global --set dependencies.shared false
-          scripts/build_als.sh all ${{ env.TAG }}
+          scripts/build_als.sh all "$TAG"
+          .github/workflows/pack-binaries.sh "$TAG"
+          if [[ ${GITHUB_REF##*/} = 2*.[0-9]*.[0-9]* ]]; then
+              .github/workflows/release.sh "${{ secrets.GITHUB_TOKEN }}" "$TAG"
+          fi
       - name: Archive ALS binary
         if: ${{ github.event_name == 'push' }}
         uses: actions/upload-artifact@v3
@@ -58,29 +62,4 @@ jobs:
           path: |
             integration/vscode/ada/arm*
             integration/vscode/ada/x64*
-  package:
-    if: ${{ github.event_name == 'push' }}
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get als
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v3
-      - name: Pack vscode extension
-        run: |
-          if [[ ${GITHUB_REF##*/} = 2*.[0-9]*.[0-9]* ]]; then
-              TAG="${GITHUB_REF##*/}"
-              .github/workflows/release.sh "${{ secrets.GITHUB_TOKEN }}" $TAG
-          else
-              TAG="$DEFAULT_TAG"
-          fi
-          echo "TAG=$TAG" >> $GITHUB_ENV
-          .github/workflows/pack-binaries.sh "${{secrets.VSCE_TOKEN}}" "${{secrets.OPENVSX_TOKEN}}" $TAG
-      - name: Archive ALS vsix
-        uses: actions/upload-artifact@v3
-        with:
-          name: als-vsix-${{ env.TAG }}
-          path: "*.vsix"
+            path: "*.vsix"
