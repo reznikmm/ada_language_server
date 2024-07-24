@@ -9,8 +9,26 @@ TAG=$2 # Release name/tag
 git tag --delete "$TAG"
 git fetch --tags
 
-git show --no-patch --format=%n "$TAG" |
-   sed -e '1,/Release notes/d' >release_notes.md
+function release_notes() {
+   echo "# Release notes"
+
+   git show --no-patch --format=%n "$TAG" |
+      sed -e '1,/Release notes/d'
+   echo ""
+
+   COMMITS=commits.txt
+
+   if [ -f "$COMMITS" ]; then
+      {
+         echo "# Dependency commits"
+         echo ""
+         cat "$COMMITS"
+         echo ""
+      }
+   fi
+}
+
+release_notes >release_notes.md
 
 # Try to create a release
 jq --null-input --arg tag "$TAG" \
