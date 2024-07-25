@@ -12,6 +12,9 @@ tags = ["format", "prettier"]
 [environment.'case(os)'.macos.DYLD_LIBRARY_PATH]
 append = "${CRATE_ROOT}/lib/relocatable/prod"
 
+[environment.'case(os)'.windows.PATH]
+append = "${CRATE_ROOT}/lib/relocatable/prod"
+
 [[depends-on]]
 gnatcoll         = "*"
 vss              = "*"

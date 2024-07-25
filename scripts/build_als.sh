@@ -111,16 +111,18 @@ function build_als() {
    ADALIB=$(dirname "$(alr exec gcc -- -print-libgcc-file-name)")/adalib
    LIBGCC=$(dirname "$(alr exec gcc -- -print-file-name=libgcc_s.so.1)")
    DEPS=$PWD/alire/cache/dependencies
-   export DYLD_LIBRARY_PATH=$ADALIB:$DYLD_LIBRARY_PATH
-   export DYLD_LIBRARY_PATH=$LIBGCC:$DYLD_LIBRARY_PATH
-   export DYLD_LIBRARY_PATH=$DEPS/gnatcoll_iconv_24.0.0_e90c5b4d/iconv/lib/relocatable:$DYLD_LIBRARY_PATH
-   export DYLD_LIBRARY_PATH=$DEPS/gnatcoll_gmp_24.0.0_e90c5b4d/gmp/lib/relocatable:$DYLD_LIBRARY_PATH
-   export DYLD_LIBRARY_PATH=$DEPS/xmlada_24.0.0_ae5a015b/schema/lib/relocatable:$DYLD_LIBRARY_PATH
-   export DYLD_LIBRARY_PATH=$DEPS/xmlada_24.0.0_ae5a015b/dom/lib/relocatable:$DYLD_LIBRARY_PATH
-   export DYLD_LIBRARY_PATH=$DEPS/xmlada_24.0.0_ae5a015b/sax/lib/relocatable:$DYLD_LIBRARY_PATH
-   export DYLD_LIBRARY_PATH=$DEPS/xmlada_24.0.0_ae5a015b/input_sources/lib/relocatable:$DYLD_LIBRARY_PATH
-   export DYLD_LIBRARY_PATH=$DEPS/xmlada_24.0.0_ae5a015b/unicode/lib/relocatable:$DYLD_LIBRARY_PATH
+   export NEW_PATH=$ADALIB:$NEW_PATH
+   export NEW_PATH=$LIBGCC:$NEW_PATH
+   export NEW_PATH=$DEPS/gnatcoll_iconv_24.0.0_e90c5b4d/iconv/lib/relocatable:$NEW_PATH
+   export NEW_PATH=$DEPS/gnatcoll_gmp_24.0.0_e90c5b4d/gmp/lib/relocatable:$NEW_PATH
+   export NEW_PATH=$DEPS/xmlada_24.0.0_ae5a015b/schema/lib/relocatable:$NEW_PATH
+   export NEW_PATH=$DEPS/xmlada_24.0.0_ae5a015b/dom/lib/relocatable:$NEW_PATH
+   export NEW_PATH=$DEPS/xmlada_24.0.0_ae5a015b/sax/lib/relocatable:$NEW_PATH
+   export NEW_PATH=$DEPS/xmlada_24.0.0_ae5a015b/input_sources/lib/relocatable:$NEW_PATH
+   export NEW_PATH=$DEPS/xmlada_24.0.0_ae5a015b/unicode/lib/relocatable:$NEW_PATH
 
+   export DYLD_LIBRARY_PATH=$NEW_PATH:$DYLD_LIBRARY_PATH
+   export PATH=$NEW_PATH:$PATH
    LIBRARY_TYPE=static STANDALONE=no alr exec make -- "VERSION=$TAG" check || true # FIXME!
 }
 

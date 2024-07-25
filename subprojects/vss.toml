@@ -14,6 +14,9 @@ project-files = ["gnat/vss_text.gpr", "gnat/vss_json.gpr", "gnat/vss_regexp.gpr"
 [environment.'case(os)'.macos.DYLD_LIBRARY_PATH]
 append = "${CRATE_ROOT}/.libs/relocatable"
 
+[environment.'case(os)'.windows.PATH]
+append = "${CRATE_ROOT}/.libs/relocatable"
+
 [[depends-on]]
 gnat = ">=11 & <2000" # Uses Ada 2022 syntax
 
