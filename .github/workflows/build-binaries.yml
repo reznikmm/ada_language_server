@@ -36,13 +36,19 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Install Alire
+        if: ${{ matrix.os == 'macos-14' }}
+        run: |
+          curl -L -O https://github.com/alire-project/alire/releases/download/nightly/alr-nightly-bin-aarch64-macos.zip
+          unzip alr-nightly-bin-aarch64-macos.zip
+          bin/alr index --reset-community
+          bin/alr toolchain --select gnat_native^14
+          echo $PWD/bin >> $GITHUB_PATH
       - name: Get GNAT toolchain with alire
-        uses: reznikmm/setup-alire@v4
-        #uses: alire-project/setup-alire@v3
-        # Get alr nightly build to have it on MacOS X
+        if: ${{ matrix.os != 'macos-14' }}
+        uses: alire-project/setup-alire@v3
         with:
-          version: "nightly"
-          toolchain: gnat_native^14 #gprbuild^22 # no gprbuild for ARM64
+          toolchain: gnat_native^14
       - name: Build
         run: |
           alr settings --global --set dependencies.shared false
@@ -60,9 +66,6 @@ jobs:
       - name: Package
         run: |
           .github/workflows/pack-binaries.sh "$TAG"
-          if [[ ${GITHUB_REF##*/} = 2*.[0-9]*.[0-9]* ]]; then
-              .github/workflows/release.sh "${{ secrets.GITHUB_TOKEN }}" "$TAG"
-          fi
       - name: Archive ALS binary
         if: ${{ github.event_name == 'push' }}
         uses: actions/upload-artifact@v4

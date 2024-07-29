@@ -2,17 +2,6 @@
 set -x -e
 TAG=$1 # For master it's 24.0.999, while for tag it's the tag itself
 
-function make_change_log() {
-   echo "# Release notes"
-   echo ""
-   for TAG_ID in $(git tag --list --sort=-v:refname '2*'); do
-      DATE=$(git show --no-patch --format=Date:%ad --date=short "$TAG_ID" |
-         grep Date: | sed -e s/Date://)
-      echo "## $TAG_ID ($DATE)"
-      git show --no-patch --format=%n "$TAG_ID" | sed -e '1,/Release notes/d'
-   done
-}
-
 NODE_PLATFORM=$(node -e "console.log(process.platform)")
 NODE_ARCH=$(node -e "console.log(process.arch)")
 ext_dir=integration/vscode/ada
@@ -31,8 +20,6 @@ ext_dir=integration/vscode/ada
 
    # Delete debug info
    rm -rf -v {arm,arm64,x64}/{linux,darwin,win32}/*.{debug,dSYM}
-   # Create change log
-   make_change_log >CHANGELOG.md
    # Create the VSIX
    npx vsce package --target "${NODE_PLATFORM}-${NODE_ARCH}"
 )
