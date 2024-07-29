@@ -42,13 +42,13 @@ jobs:
           curl -L -O https://github.com/alire-project/alire/releases/download/nightly/alr-nightly-bin-aarch64-macos.zip
           unzip alr-nightly-bin-aarch64-macos.zip
           bin/alr index --reset-community
-          bin/alr toolchain --select gnat_native^14
+          bin/alr toolchain --select gnat_native^14 gprbuild^24
           echo $PWD/bin >> $GITHUB_PATH
       - name: Get GNAT toolchain with alire
         if: ${{ matrix.os != 'macos-14' }}
         uses: alire-project/setup-alire@v3
         with:
-          toolchain: gnat_native^14
+          toolchain: gnat_native^14 gprbuild^24
       - name: Build
         run: |
           alr settings --global --set dependencies.shared false

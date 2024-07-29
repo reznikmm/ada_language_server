@@ -81,8 +81,6 @@ function pin_crates() {
       alr --force --non-interactive pin "$crate" "--use=$PWD/subprojects/$crate"
    done
 
-   # Install gprbuild from our index. We need it for Mac OS X ARM64
-   alr toolchain --select gprbuild^24
    alr action -r post-fetch # Configure XmlAda, etc
 }
 
