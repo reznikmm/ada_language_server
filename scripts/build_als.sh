@@ -81,9 +81,7 @@ function pin_crates() {
       alr --force --non-interactive pin "$crate" "--use=$PWD/subprojects/$crate"
    done
 
-   # Install gprbuild from our index. We need it for Mac OS X ARM64
-   alr toolchain --select gprbuild^24
-   alr action -r post-fetch # Configure XmlAda, etc
+   alr exec alr -- action -r post-fetch # Configure XmlAda, etc
 }
 
 # Build langkit shared libraries required to generate libadalang.
@@ -103,7 +101,7 @@ function build_so_raw() {
 
 # Run build_so_raw in Alire environment
 function build_so() {
-   LIBRARY_PATH=relocatable alr exec "$0" -- build_so_raw
+   LIBRARY_PATH=relocatable alr exec bash -- "$0" build_so_raw
 }
 
 # Build ALS with alire
@@ -189,12 +187,6 @@ function strip_debug() {
    fi
    cd -
 }
-
-# Setup venv for python
-[ -d venv ] || python3 -m venv venv
-# shellcheck source=/dev/null
-. venv/bin/activate
-pip3 install e3-testsuite
 
 case ${1:-all} in
 all)

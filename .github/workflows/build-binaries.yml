@@ -1,11 +1,10 @@
 on:
   push:
-    branches:
-      - edge
-      - topic/alr_ci
     tags:
       - 2*.*.*
   workflow_dispatch:
+  schedule:
+      - cron: '10 7 * * 2'
 
 name: Build binaries
 env:
@@ -15,14 +14,14 @@ jobs:
     name: Build and deploy
     strategy:
       fail-fast: false
-      matrix: # Build debug and/or production
-        os: [macos-12, macos-14, ubuntu-20.04]
+      matrix:
+        os: [macos-12, macos-14]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: '3.10'
       - name: Initialize TAG and git autocrlf
         shell: bash
         run: |
@@ -36,22 +35,25 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Install Alire
+      - name: Get GNAT toolchain with alire (AArch64)
         if: ${{ matrix.os == 'macos-14' }}
         run: |
           curl -L -O https://github.com/alire-project/alire/releases/download/nightly/alr-nightly-bin-aarch64-macos.zip
           unzip alr-nightly-bin-aarch64-macos.zip
           bin/alr index --reset-community
-          bin/alr toolchain --select gnat_native^14
+          bin/alr toolchain --select gnat_native^14 gprbuild^24
           echo $PWD/bin >> $GITHUB_PATH
-      - name: Get GNAT toolchain with alire
+      - name: Get GNAT toolchain with alire (x86_64)
         if: ${{ matrix.os != 'macos-14' }}
         uses: alire-project/setup-alire@v3
         with:
-          toolchain: gnat_native^14
+          toolchain: gnat_native^14 gprbuild^24
       - name: Build
         run: |
           alr settings --global --set dependencies.shared false
+          python3 -m venv venv
+          . venv/bin/activate
+          pip3 install e3-testsuite
           scripts/build_als.sh all "$TAG"
       - name: Archive ALS binary
         uses: actions/upload-artifact@v4
@@ -76,3 +78,14 @@ jobs:
           # entries
           path: |
             *.vsix
+      - name: Upload result to AWS
+        if: ${{ github.repository == 'AdaCore/ada_language_server' }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{secrets.GHA_PUBLISH_ACCESS_KEY_ID}}
+          AWS_SECRET_ACCESS_KEY: ${{secrets.GHA_PUBLISH_SECRET}}
+          AWS_DEFAULT_REGION: eu-west-1
+        run: |
+          for FILE in *.vsix ; do
+            aws s3 cp ${FILE} s3://adacore-gha-tray-eu-west-1/vscode-extension/${TAG}/ --sse=AES256
+          done
+          aws s3 ls s3://adacore-gha-tray-eu-west-1/vscode-extension/${TAG}/
