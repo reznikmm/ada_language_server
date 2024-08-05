@@ -97,6 +97,7 @@ function pin_crates() {
 # Clean `.ali` and `.o` to avoid static vis relocatable mess
 function build_so_raw() {
    cd subprojects/langkit_support
+   echo "GPR_PROJECT_PATH=$GPR_PROJECT_PATH"
    sed -i.bak -e 's/GPR_BUILD/GPR_LIBRARY_TYPE/' ./langkit/libmanage.py
    pip install .
    python manage.py make --no-mypy --generate-auto-dll-dirs \

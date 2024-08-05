@@ -31,6 +31,13 @@ jobs:
           else
               echo "TAG=$DEFAULT_TAG" >> $GITHUB_ENV
           fi
+      - name: Force Alire use preinstalled MSYS2
+        shell: bash
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          mkdir -p ~/.config/alire
+          echo '[msys2]' >> ~/.config/alire/config.toml
+          echo 'install_dir = "C:\\msys64"' >> ~/.config/alire/config.toml
       - name: Get als
         uses: actions/checkout@v3
         with:
@@ -49,10 +56,11 @@ jobs:
         with:
           toolchain: gnat_native^14 gprbuild
       - name: Build
+        shell: bash
         run: |
           alr settings --global --set dependencies.shared false
-          python3 -m venv venv
-          . venv/bin/activate
+          # python3 -m venv venv
+          # . venv/bin/activate
           pip3 install e3-testsuite
           scripts/build_als.sh all "$TAG"
       - name: Archive ALS binary
