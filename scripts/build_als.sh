@@ -115,11 +115,24 @@ function build_so() {
 
 # Build ALS with alire
 function build_als() {
-   ADALIB=$(dirname "$(alr exec gcc -- -print-libgcc-file-name)")/adalib
-   LIBGCC=$(dirname "$(alr exec gcc -- -print-file-name=libgcc_s.so.1)")
+   ADALIB=$(alr exec gcc -- -print-libgcc-file-name)
+
+   if [[ $NODE_ARCH_PLATFORM == "x64/win32" ]]; then
+      ADALIB=$(cygpath -u "$ADALIB")
+      # Fix setenv.sh to be bash script for MSYS2 by replacing
+      #  1) C:\ -> /C/  2) '\' -> '/' and ';' -> ':' 3) ": export" -> "; export"
+      sed -i -e 's#\([A-Z]\):\\#/\1/#' -e 'y#\\;#/:#' -e 's/: export /; export /' "$SETENV"
+      # libgcc_s_seh-1.dll is already in PATH
+
+   elif [[ $NODE_ARCH_PLATFORM == "x64/linux" ]]; then
+      NEW_PATH=$(dirname "$(alr exec gcc -- -print-file-name=libgcc_s.so.1)")
+   else
+      NEW_PATH=$(dirname "$(alr exec gcc -- -print-file-name=libgcc_s.dylib.1)")
+   fi
+
+   ADALIB=$(dirname "$ADALIB")/adalib
    DEPS=$PWD/alire/cache/dependencies
-   NEW_PATH=$ADALIB
-   NEW_PATH=$LIBGCC:$NEW_PATH
+   NEW_PATH=$ADALIB:$NEW_PATH
 
    for ITEM in $DEPS/*/{iconv,gmp,schema,dom,sax,input_sources,unicode}; do
       [ -d "$ITEM" ] && NEW_PATH=$ITEM/lib/relocatable:$NEW_PATH
