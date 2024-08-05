@@ -73,6 +73,7 @@ jobs:
           path: |
             integration/vscode/ada/arm*
             integration/vscode/ada/x64*
+            commits.txt
       - name: Upload release
         if: ${{ env.TAG != env.DEFAULT_TAG }}
         run: |
@@ -80,16 +81,11 @@ jobs:
       - name: Package
         run: |
           .github/workflows/pack-binaries.sh "$TAG"
-      - name: Archive ALS binary
-        if: ${{ github.event_name == 'push' }}
+      - name: Archive VSIX binary
         uses: actions/upload-artifact@v4
         with:
           name: vsix-${{ matrix.os }}
-          # We know that only one of the following entries will match on a given
-          # run, so we use globs here to try to avoid warnings on unmatched
-          # entries
-          path: |
-            *.vsix
+          path: "*.vsix"
       - name: Upload result to AWS
         if: ${{ github.repository == 'AdaCore/ada_language_server' }}
         env:
