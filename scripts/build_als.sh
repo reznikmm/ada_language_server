@@ -121,7 +121,8 @@ function build_als() {
       ADALIB=$(cygpath -u "$ADALIB")
       # Fix setenv.sh to be bash script for MSYS2 by replacing
       #  1) C:\ -> /C/  2) '\' -> '/' and ';' -> ':' 3) ": export" -> "; export"
-      sed -i -e 's#\([A-Z]\):\\#/\1/#' -e 'y#\\;#/:#' -e 's/: export /; export /' "$SETENV"
+      sed -i -e 's#\([A-Z]\):\\#/\1/#g' -e 'y#\\;#/:#' -e 's/: export /; export /' "$SETENV"
+      cat "$SETENV"
       # libgcc_s_seh-1.dll is already in PATH
 
    elif [[ $NODE_ARCH_PLATFORM == "x64/linux" ]]; then

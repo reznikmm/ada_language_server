@@ -15,7 +15,10 @@ disabled = true
 [environment.'case(os)'.windows.GPR_PROJECT_PATH]
 prepend = "${CRATE_ROOT}/core;${CRATE_ROOT}/projects;${CRATE_ROOT}/minimal"
 
-[environment.'case(os)'.'...'.GPR_PROJECT_PATH]
+[environment.'case(os)'.'linux'.GPR_PROJECT_PATH]
+prepend = "${CRATE_ROOT}/core:${CRATE_ROOT}/projects:${CRATE_ROOT}/minimal"
+
+[environment.'case(os)'.'macos'.GPR_PROJECT_PATH]
 prepend = "${CRATE_ROOT}/core:${CRATE_ROOT}/projects:${CRATE_ROOT}/minimal"
 
 [environment.'case(os)'.macos.DYLD_LIBRARY_PATH]
