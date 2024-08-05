@@ -70,7 +70,7 @@ upload_url=$(curl \
 echo "upload_url=$upload_url"
 
 FILE=$NAME.zip
-zip -9 -r "$FILE" "integration/vscode/ada/$NODE_ARCH_PLATFORM"
+zip -9 -r "$FILE" "integration/vscode/ada/$NODE_ARCH_PLATFORM" commits.txt
 
 # Upload $FILE as an asset to the release
 curl \

@@ -75,10 +75,12 @@ jobs:
             integration/vscode/ada/x64*
             commits.txt
       - name: Upload release
+        shell: bash
         if: ${{ env.TAG != env.DEFAULT_TAG }}
         run: |
           .github/workflows/release.sh "${{ secrets.GITHUB_TOKEN }}" $TAG ""
       - name: Package
+        shell: bash
         run: |
           .github/workflows/pack-binaries.sh "$TAG"
       - name: Archive VSIX binary
@@ -87,6 +89,7 @@ jobs:
           name: vsix-${{ matrix.os }}
           path: "*.vsix"
       - name: Upload result to AWS
+        shell: bash
         if: ${{ github.repository == 'AdaCore/ada_language_server' }}
         env:
           AWS_ACCESS_KEY_ID: ${{secrets.GHA_PUBLISH_ACCESS_KEY_ID}}
