@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-12, macos-14]
+        os: [macos-12, macos-14, ubuntu-20.04, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Setup Python
@@ -41,13 +41,13 @@ jobs:
           curl -L -O https://github.com/alire-project/alire/releases/download/nightly/alr-nightly-bin-aarch64-macos.zip
           unzip alr-nightly-bin-aarch64-macos.zip
           bin/alr index --reset-community
-          bin/alr toolchain --select gnat_native^14 gprbuild^24
+          bin/alr toolchain --select gnat_native^14 gprbuild
           echo $PWD/bin >> $GITHUB_PATH
       - name: Get GNAT toolchain with alire (x86_64)
         if: ${{ matrix.os != 'macos-14' }}
         uses: alire-project/setup-alire@v3
         with:
-          toolchain: gnat_native^14 gprbuild^24
+          toolchain: gnat_native^14 gprbuild
       - name: Build
         run: |
           alr settings --global --set dependencies.shared false
@@ -65,6 +65,10 @@ jobs:
           path: |
             integration/vscode/ada/arm*
             integration/vscode/ada/x64*
+      - name: Upload release
+        if: ${{ env.TAG != env.DEFAULT_TAG }}
+        run: |
+          .github/workflows/release.sh "${{ secrets.GITHUB_TOKEN }}" $TAG ""
       - name: Package
         run: |
           .github/workflows/pack-binaries.sh "$TAG"

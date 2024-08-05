@@ -1,7 +1,23 @@
 #!/bin/bash
 set -x -e
 GITHUB_ACCESS_TOKEN=$1
-TAG=$2 # Release name/tag
+TAG=$2                # Release name/tag
+NODE_ARCH_PLATFORM=$3 # One of:
+# arm64/darwin
+# arm64/linux
+# x64/darwin
+# x64/linux
+# x64/win32
+
+if [[ -z "$NODE_ARCH_PLATFORM" ]]; then
+   # Get architecture and platform information from node.
+   NODE_PLATFORM=$(node -e "console.log(process.platform)")
+   NODE_ARCH=$(node -e "console.log(process.arch)")
+   NODE_ARCH_PLATFORM=$NODE_ARCH/$NODE_PLATFORM
+   NAME=$NODE_ARCH-$NODE_PLATFORM
+else
+   NAME=${NODE_ARCH_PLATFORM%/*}-${NODE_ARCH_PLATFORM#*/}
+fi
 
 # For tags `actions/checkout@v2` action fetches a tag's commit, but
 # not the tag annotation itself. Let's refetch the tag from origin.
@@ -53,13 +69,14 @@ upload_url=$(curl \
 
 echo "upload_url=$upload_url"
 
-for FILE in *.vsix; do
-   # Upload $FILE as an asset to the release
-   curl \
-      -X POST \
-      -H "Accept: application/vnd.github+json" \
-      -H "Authorization: token $GITHUB_ACCESS_TOKEN" \
-      -H 'Content-Type: application/zip' \
-      --data-binary "@$FILE" \
-      "$upload_url?name=$FILE"
-done
+FILE=$NAME.zip
+zip -9 -r "$FILE" "integration/vscode/ada/$NODE_ARCH_PLATFORM"
+
+# Upload $FILE as an asset to the release
+curl \
+   -X POST \
+   -H "Accept: application/vnd.github+json" \
+   -H "Authorization: token $GITHUB_ACCESS_TOKEN" \
+   -H 'Content-Type: application/zip' \
+   --data-binary "@$FILE" \
+   "$upload_url?name=$FILE"

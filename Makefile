@@ -102,12 +102,12 @@ endif
 all: coverage-instrument
 ifeq ($(ALIRE),True)
 	alr build -- -XVERSION=$(VERSION) -XBUILD_DATE=$(BUILD_DATE) $(GPRBUILD_FLAGS)
+else
+	$(GPRBUILD) -P gnat/lsp_server.gpr -p $(COVERAGE_BUILD_FLAGS) \
+		-XVERSION=$(VERSION) -XBUILD_DATE=$(BUILD_DATE)
 endif
 	$(GPRBUILD) -P gnat/lsp_3_17.gpr -p $(COVERAGE_BUILD_FLAGS)
 	$(GPRBUILD) -P gnat/tester.gpr -p $(BUILD_FLAGS)
-	$(GPRBUILD) -d -ws -c -u -P gnat/lsp_server.gpr -p $(BUILD_FLAGS) s-memory.adb
-	$(GPRBUILD) -P gnat/lsp_server.gpr -p $(COVERAGE_BUILD_FLAGS) \
-		-XVERSION=$(VERSION) -XBUILD_DATE=$(BUILD_DATE)
 	$(GPRBUILD) -P gnat/lsp_client.gpr -p $(COVERAGE_BUILD_FLAGS)
 ifdef NODE
 	mkdir -p integration/vscode/ada/$(NODE_ARCH)/$(NODE_PLATFORM)

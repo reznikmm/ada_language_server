@@ -2,7 +2,14 @@
 
 set -e -x
 
-TAG=$2 # For master it's 24.0.999, while for tag it's the tag itself
+STEP=${1:-all}
+TAG=$2                # For master it's 24.0.999, while for tag it's the tag itself
+NODE_ARCH_PLATFORM=$3 # One of:
+# arm64/darwin
+# arm64/linux
+# x64/darwin
+# x64/linux
+# x64/win32
 
 # Crates to pin from GitHub repo
 
@@ -74,7 +81,8 @@ function pin_crates() {
 
       URL="https://github.com/AdaCore/${repo:-$crate}.git"
       GIT="git clone --depth=1"
-      $GIT -b "${branch:-master}" "$URL" "subprojects/$crate"
+      [ -d "subprojects/$crate" ] ||
+         $GIT -b "${branch:-master}" "$URL" "subprojects/$crate"
       commit=$(git -C "subprojects/$crate" rev-parse HEAD)
       echo "$commit $crate" >>commits.txt
       cp -v "subprojects/$crate".toml "subprojects/$crate/alire.toml"
@@ -91,7 +99,7 @@ function build_so_raw() {
    cd subprojects/langkit_support
    sed -i.bak -e 's/GPR_BUILD/GPR_LIBRARY_TYPE/' ./langkit/libmanage.py
    pip install .
-   python manage.py make --no-mypy \
+   python manage.py make --no-mypy --generate-auto-dll-dirs \
       --library-types=relocatable --gargs "-cargs -fPIC"
    python manage.py setenv >"$SETENV"
    cd -
@@ -109,19 +117,18 @@ function build_als() {
    ADALIB=$(dirname "$(alr exec gcc -- -print-libgcc-file-name)")/adalib
    LIBGCC=$(dirname "$(alr exec gcc -- -print-file-name=libgcc_s.so.1)")
    DEPS=$PWD/alire/cache/dependencies
-   export NEW_PATH=$ADALIB:$NEW_PATH
-   export NEW_PATH=$LIBGCC:$NEW_PATH
-   export NEW_PATH=$DEPS/gnatcoll_iconv_24.0.0_e90c5b4d/iconv/lib/relocatable:$NEW_PATH
-   export NEW_PATH=$DEPS/gnatcoll_gmp_24.0.0_e90c5b4d/gmp/lib/relocatable:$NEW_PATH
-   export NEW_PATH=$DEPS/xmlada_24.0.0_ae5a015b/schema/lib/relocatable:$NEW_PATH
-   export NEW_PATH=$DEPS/xmlada_24.0.0_ae5a015b/dom/lib/relocatable:$NEW_PATH
-   export NEW_PATH=$DEPS/xmlada_24.0.0_ae5a015b/sax/lib/relocatable:$NEW_PATH
-   export NEW_PATH=$DEPS/xmlada_24.0.0_ae5a015b/input_sources/lib/relocatable:$NEW_PATH
-   export NEW_PATH=$DEPS/xmlada_24.0.0_ae5a015b/unicode/lib/relocatable:$NEW_PATH
+   NEW_PATH=$ADALIB
+   NEW_PATH=$LIBGCC:$NEW_PATH
 
+   for ITEM in $DEPS/*/{iconv,gmp,schema,dom,sax,input_sources,unicode}; do
+      [ -d "$ITEM" ] && NEW_PATH=$ITEM/lib/relocatable:$NEW_PATH
+   done
+
+   echo "NEW_PATH=$NEW_PATH"
    export DYLD_LIBRARY_PATH=$NEW_PATH:$DYLD_LIBRARY_PATH
-   export PATH=$NEW_PATH:$PATH
-   LIBRARY_TYPE=static STANDALONE=no alr exec make -- "VERSION=$TAG" check || true # FIXME!
+   export PATH=$NEW_PATH":$PATH"
+   # Let's ignore make check exit code until it is stable
+   LIBRARY_TYPE=static STANDALONE=no alr exec make -- "VERSION=$TAG" check || true
 }
 
 # Find the path to libgmp as linked in the given executable
@@ -144,10 +151,14 @@ function do_fix_rpath() {
    install_name_tool -add_rpath @executable_path "$1"
 }
 
-# Get architecture and platform information from node.
-NODE_PLATFORM=$(node -e "console.log(process.platform)")
-NODE_ARCH=$(node -e "console.log(process.arch)")
-ALS_EXEC_DIR=integration/vscode/ada/$NODE_ARCH/$NODE_PLATFORM
+if [[ -z "$NODE_ARCH_PLATFORM" ]]; then
+   # Get architecture and platform information from node.
+   NODE_PLATFORM=$(node -e "console.log(process.platform)")
+   NODE_ARCH=$(node -e "console.log(process.arch)")
+   NODE_ARCH_PLATFORM=$NODE_ARCH/$NODE_PLATFORM
+fi
+
+ALS_EXEC_DIR=integration/vscode/ada/$NODE_ARCH_PLATFORM
 
 function fix_rpath() {
    if [ "$RUNNER_OS" = macOS ]; then
@@ -188,7 +199,7 @@ function strip_debug() {
    cd -
 }
 
-case ${1:-all} in
+case $STEP in
 all)
    install_index
    pin_crates
