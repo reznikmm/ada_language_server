@@ -69,14 +69,14 @@ upload_url=$(curl \
 
 echo "upload_url=$upload_url"
 
-FILE=$NAME.zip
-zip -9 -r "$FILE" "integration/vscode/ada/$NODE_ARCH_PLATFORM" commits.txt
+FILE=$NAME.tar.gz
+tar czvf "$FILE" "integration/vscode/ada/$NODE_ARCH_PLATFORM" commits.txt
 
 # Upload $FILE as an asset to the release
 curl \
    -X POST \
    -H "Accept: application/vnd.github+json" \
    -H "Authorization: token $GITHUB_ACCESS_TOKEN" \
-   -H 'Content-Type: application/zip' \
+   -H 'Content-Type: application/tar+gzip' \
    --data-binary "@$FILE" \
    "$upload_url?name=$FILE"
