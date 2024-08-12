@@ -4,7 +4,7 @@ set -e -x
 
 STEP=${1:-all}
 TAG=$2                # For master it's 24.0.999, while for tag it's the tag itself
-NODE_ARCH_PLATFORM=$3 # One of:
+NODE_ARCH_PLATFORM=$3 # Empty - autodetect with `node`, otherwise one of:
 # arm64/darwin
 # arm64/linux
 # x64/darwin
@@ -17,6 +17,7 @@ PINS="
 adasat
 gnatcoll
 gnatdoc
+gnatformat
 lal_refactor
 langkit_support
 libadalang
@@ -45,6 +46,7 @@ repo_vss=VSS
 
 branch_gnatdoc=edge
 branch_lal_refactor=edge
+branch_gnatformat=edge
 branch_libgpr2=next
 branch_prettier_ada=main
 
@@ -53,7 +55,7 @@ SETENV=$PWD/subprojects/libadalang/setenv.sh
 
 # Set `prod` build mode
 ########################
-# for adasat,lal,langkit,lal_refactor,laltools,markdown,spawn
+# for adasat,gnatformat,lal,langkit,lal_refactor,laltools,markdown,spawn
 export BUILD_MODE=prod
 # for others
 export GNATCOLL_BUILD_MODE=PROD
