@@ -13,7 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-12, macos-14, ubuntu-20.04, windows-latest]
+        #os: [macos-12, macos-14, ubuntu-20.04, windows-latest]
+        os: [macos-14]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Setup Python
@@ -89,6 +90,9 @@ jobs:
           alr settings --global --set dependencies.shared false
           pip3 install e3-testsuite
           scripts/build_als.sh all "$TAG"
+      - name: Setup upterm session
+        if: always()
+        uses: lhotari/action-upterm@v1
       - name: Build ALS with cross (Linux)
         if: ${{ runner.os == 'Linux' }}
         run: |
