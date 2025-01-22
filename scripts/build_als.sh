@@ -102,9 +102,9 @@ function build_so_raw() {
    echo "GPR_PROJECT_PATH=$GPR_PROJECT_PATH"
    sed -i.bak -e 's/GPR_BUILD/GPR_LIBRARY_TYPE/' ./langkit/libmanage.py
    pip install .
-   python manage.py make --no-mypy --generate-auto-dll-dirs \
+   python -m langkit.scripts.lkm make --no-mypy --generate-auto-dll-dirs \
       --library-types=relocatable --gargs "-cargs -fPIC"
-   python manage.py setenv >"$SETENV"
+   python -m langkit.scripts.lkm setenv >"$SETENV"
    cd -
    find . -name '*.o' -delete
    find . -name '*.ali' -delete
