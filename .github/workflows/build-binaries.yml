@@ -1,6 +1,6 @@
 on:
-  schedule:
-    - cron:  '0 4 * * 1-5'
+  #schedule:
+    #- cron:  '0 4 * * 1-5'
     #         | | | | + day of week (0 - 6 or SUN-SAT)
     #         | | | +-- month (1 - 12 or JAN-DEC)
     #         | | +---- day of the month (1 - 31)
@@ -57,11 +57,11 @@ jobs:
           # alire-project/setup-alire works for ARM64 Mac OS X now. Shall we use it?
           if [[ ${{ matrix.os }} == ubuntu-22.04-arm ]] ; then
             # Alire 2.1.0 was built for ubuntu 24.04, doesn't work on 22.04
-            ZIP=nightly/alr-nightly-bin-aarch64-linux.zip
+            ZIP=nightly/alr-nightly-bin-aarch64-${RUNNER_OS}.zip
           elif [[ "$RUNNER_ARCH" == ARM64 ]] ; then
-            ZIP=v2.1.0/alr-2.1.0-bin-aarch64-${RUNNER_OS}.zip
+            ZIP=nightly/alr-nightly-bin-aarch64-${RUNNER_OS}.zip
           else
-            ZIP=v2.1.0/alr-2.1.0-bin-x86_64-${RUNNER_OS}.zip
+            ZIP=nightly/alr-nightly-bin-x86_64-${RUNNER_OS}.zip
           fi
           curl -L -O https://github.com/alire-project/alire/releases/download/$ZIP
           unzip $(basename $ZIP)
@@ -86,6 +86,32 @@ jobs:
         shell: bash
         run: |
           scripts/build_als.sh test_als "$TAG"
+      - name: Build gnatformat
+        shell: bash
+        run: |
+          export BUILD_MODE=prod
+          export GNATCOLL_BUILD_MODE=PROD
+          export GPR_BUILD=production
+          export GPR2_BUILD=release
+          export VSS_BUILD_PROFILE=release
+          export PRETTIER_ADA_BUILD_MODE=prod
+          export LIBRARY_TYPE=static
+          alr exec -- gprbuild -P gnatformat_driver.gpr
+          alr exec -- gprbuild -P gnatdoc.gpr
+          alr exec -- gprinstall --prefix=gnatformat --mode=usage -p -P gnatformat_driver.gpr
+          strip gnatformat/bin/*
+          alr exec -- gprinstall --prefix=gnatdoc --mode=usage -p -P gnatdoc.gpr
+          strip gnatdoc/bin/*
+      - name: Archive gnatformat
+        uses: actions/upload-artifact@v4
+        with:
+          name: gnatformat-${{ matrix.os }}
+          path: gnatformat
+      - name: Archive gnatdoc
+        uses: actions/upload-artifact@v4
+        with:
+          name: gnatdoc-${{ matrix.os }}
+          path: gnatdoc
       - name: Archive Test Report
         uses: actions/upload-artifact@v4
         with:
@@ -108,6 +134,8 @@ jobs:
         if: ${{ env.TAG != env.DEFAULT_TAG }}
         run: |
           .github/workflows/release.sh "${{ secrets.GITHUB_TOKEN }}" $TAG ""
+          .github/workflows/release_file.sh "${{ secrets.GITHUB_TOKEN }}" $TAG "gnatformat"
+          .github/workflows/release_file.sh "${{ secrets.GITHUB_TOKEN }}" $TAG "gnatdoc"
       - name: Package
         shell: bash
         run: |

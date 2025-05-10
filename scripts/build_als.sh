@@ -314,7 +314,8 @@ function build_als() {
 
    # We use 'alr exec' to benefit from Alire setting up GPR_PROJECT_PATH with
    # all the dependencies.
-   LIBRARY_TYPE=static STANDALONE=no alr exec make -- "VERSION=$TAG" "GPRBUILD_CARGS=-m -vh" all
+   LIBRARY_TYPE=static STANDALONE=no \
+     alr exec make -- "VERSION=$TAG" "GPRBUILD_CARGS=-m -vh" all
 }
 
 function test_als() {
