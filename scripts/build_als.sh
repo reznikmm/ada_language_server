@@ -49,16 +49,17 @@ xdiff
 
 # Pins repo names (crate name by default)
 
-repo_gnatcoll=gnatcoll-core
-repo_lal_refactor=lal-refactor
-repo_langkit_support=langkit
-repo_libadalang_tools=libadalang-tools
-repo_libgpr=gprbuild
-repo_libgpr2=gpr
-repo_prettier_ada=prettier-ada
-repo_vss_text=vss-text
-repo_vss_extra=vss-extra
-repo_xdiff=xdiff
+repo_gnatcoll=AdaCore/gnatcoll-core
+repo_lal_refactor=AdaCore/lal-refactor
+repo_langkit_support=AdaCore/langkit
+repo_libadalang_tools=AdaCore/libadalang-tools
+repo_libgpr=AdaCore/gprbuild
+repo_libgpr2=AdaCore/gpr
+repo_prettier_ada=AdaCore/prettier-ada
+repo_vss_text=AdaCore/vss-text
+repo_vss_extra=AdaCore/vss-extra
+repo_xdiff=AdaCore/xdiff
+repo_adasat=reznikmm/adasat
 
 # Pins branches (master by default)
 
@@ -118,12 +119,12 @@ function pin_crates() {
       commit=""
 
       if [ -f deps.txt ]; then
-         commit=$(grep "^${repo:-$crate}=" deps.txt | sed -e 's/.*=//')
+         commit=$(grep "^${repo:-AdaCore/$crate}=" deps.txt | sed -e 's/.*=//')
       fi
 
       url_var=url_$crate
       url_override=${!url_var}
-      URL=${url_override:-"https://github.com/AdaCore/${repo:-$crate}.git"}
+      URL=${url_override:-"https://github.com/${repo:-AdaCore/$crate}.git"}
 
       if [ ! -d "subprojects/$crate" ]; then
          # If the checkout doesn't exist, clone
