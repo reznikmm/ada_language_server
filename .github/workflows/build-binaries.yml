@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, macos-15-intel, ubuntu-22.04, ubuntu-22.04-arm, windows-latest]
+        os: [macos-15, macos-15-intel, ubuntu-22.04, ubuntu-22.04-arm, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Setup Python
@@ -62,6 +62,7 @@ jobs:
           curl -L -O https://github.com/alire-project/alire/releases/download/$ZIP
           unzip $(basename $ZIP)
           bin/alr index --reset-community
+          bin/alr index --add https://github.com/AldanTanneo/alire-index#testing/gcc-16-rc1 --before community --name gcc16
           bin/alr toolchain --select gnat_native gprbuild
           echo $PWD/bin >> $GITHUB_PATH
       - name: Fetch dependency commits numbers
